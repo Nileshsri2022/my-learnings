@@ -1,234 +1,298 @@
+# 🗺️ Master Roadmap Prompt Template
+
+> **How to use:** Replace every `[TOPIC]` and `[WRITE SKILLS or "NONE"]` before sending.
+> Send sections 1–3 first, then ask for Phase details one or two at a time.
+
+---
+
+## 🧑‍💻 Role
+
 Act as a world-class curriculum designer, senior engineer, and mentor
-with 20+ years of experience in [TOPIC].
+with 20+ years of experience in **[TOPIC]**.
 
-Your task is to create a CLEAR, VISUAL, EXHAUSTIVE ROADMAP to master
-[TOPIC] from absolute beginner → job-ready practitioner.
+Your task: create a **clear, visual, exhaustive roadmap** to master
+**[TOPIC]** from absolute beginner → job-ready practitioner.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-ABOUT ME
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
 
-• BTech CSE student (India)
-• Level in [TOPIC]: ABSOLUTE BEGINNER — I know NOTHING
-• Existing skills: [WRITE SKILLS or "NONE"]
-• Goal:
-  - Campus placements (FAANG / startups / product companies)
-  - Build real-world portfolio projects
-  - Deep conceptual understanding (passion)
-• NOT preparing for GATE or semester exams
-• Treat me like a smart beginner — explain jargon on first use
-• Use real-world analogies for EVERY difficult concept
+## 👤 About Me
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-ROADMAP OPTIMIZATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Field | Detail |
+|-------|--------|
+| Degree | BTech CSE student (India) |
+| Level in [TOPIC] | ABSOLUTE BEGINNER — I know NOTHING |
+| Existing skills | [WRITE SKILLS or "NONE"] |
+| Goals | Campus placements (FAANG / startups / product companies) · Portfolio projects · Deep conceptual understanding |
+| NOT preparing for | GATE or semester exams |
+| Teaching style | Treat me like a smart beginner — explain jargon on first use, use real-world analogies for every difficult concept |
 
-Optimize for:
-• Industry relevance (modern practices 2024+)
-• Tech interview preparation
-• Real-world projects & portfolio
-• Fast visual understanding
+---
 
-Automatically EXCLUDE:
-• Outdated / dead technologies
-• Academic-only concepts never used in industry or interviews
-• Niche / vendor-specific tools (learn on-the-job)
+## ⚙️ Roadmap Optimization
 
-List all excluded topics in a separate EXCLUDED TABLE with reasons.
+**Optimize for:**
+- Industry relevance (modern practices 2024+)
+- Tech interview preparation
+- Real-world projects & portfolio
+- Fast visual understanding
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣ PHASE OVERVIEW TABLE
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Automatically EXCLUDE:**
+- Outdated / dead technologies
+- Academic-only concepts never used in industry or interviews
+- Niche / vendor-specific tools (learn on-the-job)
 
-| Phase | Focus | Key Skills | Outcome | Time (2hr/day) |
+> List all excluded topics in a separate **Excluded Table** with reasons.
 
-Phase 0 → Orientation & Mindset
-Phase 1 → Fundamentals
-Phase 2 → Core Concepts
-Phase 3 → Intermediate
-Phase 4 → Advanced
-Phase 5 → Expert / Mastery
-Phase 6 → Real-World Application & Growth
+---
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-2️⃣ SKILL TREE (VISUAL MAP)
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+## 1️⃣ Phase Overview Table
 
-Hierarchical tree showing how ALL topics connect:
+| Phase | Focus | Key Skills | Outcome | Time (2 hr/day) |
+|-------|-------|-----------|---------|----------------|
+| 0 | Orientation & Mindset | | | |
+| 1 | Fundamentals | | | |
+| 2 | Core Concepts | | | |
+| 3 | Intermediate | | | |
+| 4 | Advanced | | | |
+| 5 | Expert / Mastery | | | |
+| 6 | Real-World Application & Growth | | | Ongoing |
 
-TOPIC
-├── Fundamentals
-│   ├── Concept A
-│   ├── Concept B
-├── Core
-│   ├── Concept C → depends on A
-│   ├── Concept D → depends on B, C
-└── Advanced
-    ├── Concept E → depends on D
-    └── Concept F → can learn PARALLEL with E
+---
 
-Mark dependencies with → and parallel tracks with ║
+## 2️⃣ Skill Tree (Visual Map)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-3️⃣ PHASE 0 — ORIENTATION & MINDSET
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+Hierarchical table showing how ALL topics connect:
 
-• What is [TOPIC] in simplest language? (one paragraph max)
-• Why does it exist? What problem does it solve?
-• Who uses it in industry? (company examples)
-• Common myths & misconceptions (table)
-• Right mindset before starting (bullet points)
-• How [TOPIC] fits into CSE career paths (table)
+| Level | Topic | Depends On | Parallel With |
+|-------|-------|-----------|--------------|
+| Fundamentals | Concept A | — | — |
+| Fundamentals | Concept B | — | Concept A |
+| Core | Concept C | Concept A | — |
+| Core | Concept D | Concept B, C | — |
+| Advanced | Concept E | Concept D | — |
+| Advanced | Concept F | Concept D | Concept E |
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-4️⃣ PHASE DETAILS (For Phases 1-6)
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+> Mark hard dependencies and parallel-learnable tracks clearly.
 
-For EACH phase provide:
+---
 
-🎯 Phase Goal
+## 3️⃣ Phase 0 — Orientation & Mindset
+
+- What is **[TOPIC]** in simplest language? *(one paragraph max)*
+- Why does it exist? What problem does it solve?
+- Who uses it in industry? *(company examples)*
+
+**Myths & Misconceptions**
+
+| Myth | Reality |
+
+**Right mindset before starting** *(bullet points)*
+
+**Career path fit**
+
+| Career Path | How [TOPIC] fits |
+
+---
+
+## 4️⃣ Phase Details (Phases 1–6)
+
+*Provide the following for EACH phase:*
+
+### 🎯 Phase Goal
 One concrete, measurable outcome.
 
-📚 Skills Table
+---
+
+### 📚 Skills Table
+
 | # | Skill | Key Concepts | Difficulty | Interview Freq |
-Difficulty: 🟢Easy 🟡Medium 🔴Hard
-Interview: 🔥High 🌤️Medium ❄️Low
+|---|-------|-------------|------------|----------------|
 
-💡 Mental Models & Analogies
-Real-world analogy for EVERY difficult concept. (TABLE)
-| Concept | Analogy |
+> Difficulty: 🟢 Easy · 🟡 Medium · 🔴 Hard  
+> Interview Freq: 🔥 High · 🌤️ Medium · ❄️ Low
 
-🛠️ Practice
+---
+
+### 💡 Mental Models & Analogies
+
+| Concept | Real-World Analogy |
+|---------|--------------------|
+
+---
+
+### 🛠️ Practice
+
 | Skill | Exercise / Problem | Platform | Difficulty |
-Minimum 2-3 exercises per skill.
-Use real problem names (LeetCode/GFG/HackerRank).
+|-------|-------------------|---------|-----------|
 
-🧪 Milestone Checkpoint
-"You're ready for next phase ONLY when you can _____
-without looking at notes."
+> Minimum 2–3 exercises per skill. Use real problem names (LeetCode / GFG / HackerRank).
 
-⚠️ Common Mistakes
+---
+
+### 🧪 Milestone Checkpoint
+
+> "You're ready for the next phase ONLY when you can _____ without looking at notes."
+
+---
+
+### ⚠️ Common Mistakes
+
 | Mistake | Why It Happens | Fix |
+|---------|---------------|-----|
 
-🚫 What NOT To Learn Yet
-| Topic | Why Skip Now | Learn In Phase |
+---
 
-📖 Resources (FREE first)
+### 🚫 What NOT To Learn Yet
+
+| Topic | Why Skip Now | Learn in Phase |
+|-------|-------------|---------------|
+
+---
+
+### 📖 Resources (Free First)
+
 | Rank | Resource | Type | Free/Paid |
-Prioritize: Striver, CodeHelp, GFG, NPTEL, YouTube India,
-freeCodeCamp, MIT OCW. Paid = optional only.
-🥇Best 🥈Great 🥉Good
+|------|----------|------|-----------|
 
-💼 Interview Relevance
-• Companies asking this
-• Frequency
-• 2-3 sample interview Qs WITH brief approach hint
+> Priority: Striver · CodeHelp · GFG · NPTEL · YouTube India · freeCodeCamp · MIT OCW  
+> Paid = optional bonus only.  
+> 🥇 Best · 🥈 Great · 🥉 Good
+
+---
+
+### 💼 Interview Relevance
+
+- **Companies asking this:**
+- **Frequency:**
+
 | Question | Approach |
+|----------|----------|
 
-⏱️ Time Estimate
-Hours at relaxed pace (1-2 hr/day).
+---
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-5️⃣ PROJECT LADDER
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+### ⏱️ Time Estimate
 
-15 progressively harder projects:
+> ___ hours at relaxed pace (1–2 hr/day). Difficulty: 🟢/🟡/🔴
+
+---
+
+## 5️⃣ Project Ladder
 
 | # | Project | Phase | Skills Tested | Hours | Portfolio? |
+|---|---------|-------|--------------|-------|-----------|
 
-Last 5 MUST be GitHub-portfolio + resume worthy.
+> Last 5 MUST be GitHub-portfolio + resume worthy.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-6️⃣ DEPENDENCY MAP
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
+
+## 6️⃣ Dependency Map
 
 | Topic | Depends On | Leads To | Parallel? |
+|-------|-----------|---------|-----------|
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-7️⃣ GLOSSARY
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
+
+## 7️⃣ Glossary
 
 | Term | Simple Explanation |
-20-30 essential terms.
+|------|--------------------|
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-8️⃣ EXCLUDED TOPICS
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+> 20–30 essential terms.
+
+---
+
+## 8️⃣ Excluded Topics
 
 | Topic | Why Excluded |
+|-------|-------------|
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-9️⃣ DON'T SKIP LIST
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
+
+## 9️⃣ Don't Skip List
 
 | # | Concept | Phase | Why Skipping Hurts Later |
+|---|---------|-------|--------------------------|
 
-Top 15 concepts people rush through but are CRITICAL.
+> Top 15 concepts people rush through but are critical.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔟 LEARNING STRATEGY
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
 
-• Best study techniques for [TOPIC]
-• Note-taking method recommendation
-• Active recall & spaced repetition plan
-• TRUE understanding vs fake familiarity — signs
-• When to move on vs revisit
+## 🔟 Learning Strategy
 
-STUCK PROTOCOL:
+**Study techniques for [TOPIC]:**
+- Note-taking method recommendation
+- Active recall & spaced repetition plan
+- TRUE understanding vs fake familiarity — signs for each
+- When to move on vs revisit
+
+**Stuck Protocol:**
+
 | Stuck Duration | What To Do |
-| 30 minutes     |            |
-| 2 hours        |            |
-| 1 day          |            |
-| 3+ days        |            |
+|---------------|-----------|
+| 30 minutes | |
+| 2 hours | |
+| 1 day | |
+| 3+ days | |
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣1️⃣ TOOLS & SETUP
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
+
+## 1️⃣1️⃣ Tools & Setup
 
 | Phase | Tool | Purpose | Free/Paid |
+|-------|------|---------|-----------|
 
-Only what's needed per phase. Don't overwhelm at start.
+> Only what's needed per phase — don't overwhelm at start.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣2️⃣ DAILY ROUTINES
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
 
-🐢 Chill (1 hr/day — semester):
+## 1️⃣2️⃣ Daily Routines
+
+### 🐢 Chill (1 hr/day — during semester)
+
 | Block | Activity | Minutes |
+|-------|----------|---------|
 
-🚶 Steady (2 hrs/day — regular):
+### 🚶 Steady (2 hrs/day — regular)
+
 | Block | Activity | Minutes |
+|-------|----------|---------|
 
-🏃 Beast (4-6 hrs/day — vacation):
+### 🏃 Beast (4–6 hrs/day — vacation)
+
 | Block | Activity | Minutes |
+|-------|----------|---------|
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣3️⃣ COMMUNITY & HELP
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
 
-| Platform | Name | Best For |
+## 1️⃣3️⃣ Community & Help
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-FORMAT RULES (STRICT)
-━━━━━━━━━━━━━━━━━━━━━━━━━━
+| Platform | Name / Link | Best For |
+|---------|------------|---------|
 
-• Use TABLES for all structured data
-• Keep table columns SHORT — no overflow
-• Bullet points for explanations, NOT paragraphs
-• Bold key terms on first use
-• Emoji markers for consistency
-• NO long arrow-based text diagrams (use tables)
-• Optimize for quick scanning
+---
 
-CONTENT RULES (STRICT)
+## 📐 Format Rules (Strict)
 
-• DEPTH over speed — never rush fundamentals
-• Explain jargon on first use with simple definition
-• Real-world analogy for every hard concept
-• 60% practice + 40% theory ratio
-• Be SPECIFIC — not "learn basics of X" but list exact basics
-• Mark SEQUENTIAL vs PARALLEL learning tracks
-• If too long → split into parts, tell me to ask "Part 2"
+- Use **tables** for all structured data
+- Keep table columns **short** — no overflow
+- Bullet points for explanations, NOT paragraphs
+- **Bold** key terms on first use
+- Emoji markers for visual consistency
+- NO long arrow-based text diagrams — use tables
+- Optimize for **quick scanning**
 
-START NOW. Begin with sections 1-3, then Phase 1-2 details.
+## 📏 Content Rules (Strict)
+
+- **Depth over speed** — never rush fundamentals
+- Explain jargon on first use with a simple definition
+- Real-world analogy for every hard concept
+- **60% practice + 40% theory** ratio
+- Be SPECIFIC — not "learn basics of X" but list the exact basics
+- Mark SEQUENTIAL vs PARALLEL learning tracks clearly
+- If response is too long → split into parts and tell me to ask for "Part 2"
+
+---
+
+> **START NOW.**
+> Begin with Sections 1–3 and Phase 0, then Phase 1–2 details.
+> Tell me where to ask for the next part if you need to split.
