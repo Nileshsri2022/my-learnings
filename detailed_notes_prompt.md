@@ -152,7 +152,10 @@ Main Topic
 ---
 
 # STEP 4 — FORMATTING
-
+- **OUTPUT FORMAT**  Render entire output as valid Markdown (.md) — use only
+standard Markdown syntax (headings, bullets, tables, code fences, bold,
+blockquotes). No raw HTML, no special Unicode box-drawing beyond trees,
+no platform-specific formatting. Output must paste cleanly into any .md file.
 - **Bold** key terms on first mention
 - Bullets as primary format — **NOT** paragraphs
 - One idea = one bullet (up to 4 lines for complex ideas)
