@@ -1,0 +1,795 @@
+
+
+# 📌 System Design Interview — An Insider's Guide (Chapters 1–5)
+
+**Comprehensive revision notes** | Type: **System Design / Interview Guide** | Depth: **Intermediate–Advanced**
+
+---
+
+## 📑 Table of Contents
+
+1. [Chapter 1: Scale From Zero to Millions of Users](#ch1)
+2. [Chapter 2: Back-of-the-Envelope Estimation](#ch2)
+3. [Chapter 3: A Framework for System Design Interviews](#ch3)
+4. [Chapter 4: Design a Rate Limiter](#ch4)
+5. [Chapter 5: Design Consistent Hashing](#ch5)
+6. [Concept Tree](#tree)
+7. [Key Definitions](#defs)
+8. [Comparisons](#comps)
+9. [Quick-Recall Points](#recall)
+10. [Summary](#summary)
+
+---
+
+## 🔹 Chapter 1: Scale From Zero to Millions of Users {#ch1}
+
+### Single Server Setup
+
+- Everything starts on **one server**: web app, database, cache all on the same machine
+- **Request flow**:
+  1. User enters domain name (e.g., `api.mysite.com`)
+  2. **DNS** (Domain Name System) — a paid 3rd-party service — resolves domain → IP address
+  3. Browser/app sends **HTTP** requests to the web server using that IP
+  4. Web server returns **HTML pages** or **JSON responses**
+- **Two traffic sources**:
+  - **Web application** — server-side languages (Java, Python) for logic + client-side (HTML, JS) for presentation
+  - **Mobile application** — communicates via HTTP; **JSON** is the standard API response format due to simplicity
+
+---
+
+### Database — Separating Web & Data Tiers
+
+- As user base grows → separate into **web tier** (handles traffic) and **data tier** (database)
+  - Why: allows each tier to **scale independently**
+
+#### Relational vs Non-Relational Databases
+
+| Aspect | Relational (RDBMS/SQL) | Non-Relational (NoSQL) |
+|--------|----------------------|----------------------|
+| Examples | MySQL, PostgreSQL, Oracle | CouchDB, Neo4j, Cassandra, HBase, DynamoDB |
+| Data model | Tables and rows | Key-value, graph, column, document stores |
+| Join operations | Supported via SQL | Generally **not** supported |
+| History | 40+ years, well-proven | Newer, specialized |
+
+- **Default choice**: relational DB for most cases
+- **Choose NoSQL when**:
+  - Super-low latency required
+  - Data is unstructured / no relational data
+  - Only need to serialize/deserialize (JSON, XML, YAML)
+  - Massive data volume
+
+---
+
+### Vertical Scaling vs Horizontal Scaling
+
+| Aspect | Vertical Scaling ("Scale Up") | Horizontal Scaling ("Scale Out") |
+|--------|-------------------------------|----------------------------------|
+| Method | Add more CPU, RAM to existing server | Add more servers to the pool |
+| Advantage | Simple | No hard limit, better fault tolerance |
+| Limitation | **Hard hardware limit**; **no failover/redundancy** (SPOF) | More complex |
+| Best for | Low traffic | Large-scale applications |
+
+> Horizontal scaling is more desirable for large-scale applications.
+
+---
+
+### Load Balancer
+
+- **Purpose**: evenly distributes incoming traffic among web servers
+- Users connect to the **public IP** of the load balancer (not directly to web servers)
+- Web servers use **private IPs** (reachable only within the internal network) → better security
+- **Solves two problems**:
+  - **Failover**: if server 1 goes offline → traffic routed to server 2; new healthy server added to pool
+  - **Scalability**: traffic grows → just add more servers; load balancer automatically distributes requests
+
+---
+
+### Database Replication (Master/Slave)
+
+- **Master database** → handles all **write** operations (insert, delete, update)
+- **Slave database(s)** → handle **read** operations; get data copies from master
+- Most apps have **much higher read-to-write ratio** → typically more slave DBs than master DBs
+
+**Advantages**:
+- **Better performance** — reads distributed across slaves → parallel query processing
+- **Reliability** — data replicated across locations → survives disasters
+- **High availability** — system stays operational even if one DB goes offline
+
+**Failover scenarios**:
+- **Slave goes offline** → reads temporarily directed to master; new slave replaces the old one
+- **Master goes offline** → a slave is **promoted** to new master; new slave added for replication
+  - ⚠️ In production, promoting a new master is complex — slave data may not be up-to-date → requires **data recovery scripts**
+  - Advanced: multi-master and circular replication exist but are more complex
+
+**Complete request flow with LB + DB replication**:
+1. User gets load balancer IP from DNS
+2. User connects to load balancer
+3. HTTP request routed to Server 1 or Server 2
+4. Web server **reads** from slave DB
+5. Web server routes **writes** to master DB
+
+---
+
+### Cache
+
+- **Cache** — temporary storage in memory for expensive/frequently accessed data → faster subsequent requests
+- **Cache tier** — separate layer, much faster than DB
+  - Benefits: better performance, reduced DB workload, scales independently
+
+**Read-through cache strategy**:
+1. Web server checks cache for data
+2. **Cache hit** → return data to client
+3. **Cache miss** → query DB, store result in cache, return to client
+
+**Memcached API example**:
+```
+SECONDS = 1
+cache.set('myKey', 'hi there', 3600 * SECONDS)
+cache.get('myKey')
+```
+
+**Cache considerations**:
+- **When to use**: data read frequently, modified infrequently; cache uses volatile memory → not for persisting important data
+- **Expiration policy**: too short → frequent DB reloads; too long → stale data
+- **Consistency**: keeping data store and cache in sync is challenging, especially across regions (see Facebook's "Scaling Memcache" paper)
+- **Mitigating failures**: single cache server = **SPOF** → use multiple cache servers across data centers; overprovision memory as buffer
+- **Eviction policies**:
+  - **LRU** (Least Recently Used) — most popular
+  - **LFU** (Least Frequently Used)
+  - **FIFO** (First In First Out)
+
+---
+
+### Content Delivery Network (CDN)
+
+- **CDN** — network of geographically dispersed servers caching **static content** (images, videos, CSS, JS)
+- Closest CDN server to user delivers content → reduces latency
+
+**CDN workflow**:
+1. User requests asset via CDN URL (e.g., `mysite.cloudfront.net/logo.jpg`)
+2. If CDN doesn't have it → requests from **origin** (web server or S3)
+3. Origin returns file with **TTL** (Time-to-Live) header
+4. CDN caches and returns asset to user
+5. Subsequent users get cached version until TTL expires
+
+**CDN considerations**:
+- **Cost** — charged for data transfers; don't cache infrequently used assets
+- **Cache expiry** — not too long (stale) or too short (repeat reloading)
+- **CDN fallback** — handle CDN outages; clients should fall back to origin
+- **Invalidation** — two methods:
+  - Use CDN vendor APIs to invalidate objects
+  - **Object versioning** — append version parameter (e.g., `image.png?v=2`)
+
+---
+
+### Stateless Web Tier
+
+- To scale web tier horizontally → **move state out** of web servers
+- Store session data in **persistent shared storage** (relational DB, Memcached/Redis, NoSQL)
+
+**Stateful vs Stateless architecture**:
+
+| Aspect | Stateful | Stateless |
+|--------|----------|-----------|
+| State storage | Each server stores its own user sessions | Shared external data store |
+| Routing | Must use **sticky sessions** → same client always to same server | Any server can handle any request |
+| Scaling | Difficult to add/remove servers | Easy **auto-scaling** based on traffic |
+| Failure handling | Challenging | Robust |
+
+- **NoSQL** is often chosen for shared session store because it's easy to scale
+- **Autoscaling** — automatically add/remove web servers based on traffic load
+
+---
+
+### Data Centers
+
+- **geoDNS** — resolves domain names to IP addresses based on **user's geographic location**
+- Users routed to **closest data center** (e.g., x% US-East, (100-x)% US-West)
+- If one data center goes offline → 100% traffic routed to healthy one
+
+**Multi-data center challenges**:
+- **Traffic redirection** — GeoDNS directs to nearest DC
+- **Data synchronization** — replicate data across DCs; Netflix uses async multi-DC replication
+- **Test and deployment** — test at different locations; automated deployment tools keep services consistent
+
+---
+
+### Message Queue
+
+- **Durable component** stored in memory supporting **asynchronous communication**
+- Acts as **buffer** between producers and consumers
+- **Producers/publishers** → create and publish messages
+- **Consumers/subscribers** → connect to queue and process messages
+
+**Key benefit**: **decoupling** → producer and consumer can be scaled independently
+- Producer can post when consumer is unavailable (and vice versa)
+- Queue grows large → add more workers; queue mostly empty → reduce workers
+
+**Example**: photo processing — web servers publish jobs → workers pick up and process asynchronously
+
+---
+
+### Logging, Metrics, Automation
+
+- **Logging** — monitor error logs; aggregate to centralized service
+- **Metrics** — three levels:
+  - Host level: CPU, Memory, disk I/O
+  - Aggregated level: DB tier performance, cache tier performance
+  - Business metrics: DAU, retention, revenue
+- **Automation** — CI/CD; automate build, test, deploy
+
+---
+
+### Database Scaling
+
+#### Vertical Scaling (Scale Up)
+- Add more CPU, RAM, DISK to existing machine
+- Example: Amazon RDS offers servers with **24 TB RAM**
+- Stack Overflow in 2013: 10M monthly unique visitors with **1 master database**
+- **Drawbacks**: hardware limits, SPOF risk, high cost
+
+#### Horizontal Scaling (Sharding)
+- Split large databases into **shards** — smaller, independent parts
+- Each shard shares the **same schema** but holds **unique data**
+- **Sharding key** (partition key) determines data distribution
+  - Example: `user_id % 4` → routes to shard 0, 1, 2, or 3
+  - **Most important criterion**: choose a key that distributes data **evenly**
+
+**Sharding challenges**:
+- **Resharding** — needed when a shard is exhausted; use **consistent hashing** to solve
+- **Celebrity/hotspot problem** — excessive access to one shard (e.g., celebrity data); may need dedicated shards with further partitioning
+- **Join and de-normalization** — cross-shard joins are hard; workaround: **de-normalize** the DB
+
+---
+
+### Scaling Summary Checklist
+
+> - Keep web tier **stateless**
+> - Build **redundancy** at every tier
+> - **Cache** data as much as possible
+> - Support **multiple data centers**
+> - Host static assets in **CDN**
+> - Scale data tier by **sharding**
+> - **Split tiers** into individual services
+> - **Monitor** system and use **automation** tools
+
+---
+
+## 🔹 Chapter 2: Back-of-the-Envelope Estimation {#ch2}
+
+### Power of Two — Data Volume Units
+
+| Power of 2 | Approx Value | Full Name | Short |
+|-----------|-------------|-----------|-------|
+| 2^10 | 1 Thousand | 1 Kilobyte | 1 KB |
+| 2^20 | 1 Million | 1 Megabyte | 1 MB |
+| 2^30 | 1 Billion | 1 Gigabyte | 1 GB |
+| 2^40 | 1 Trillion | 1 Terabyte | 1 TB |
+| 2^50 | 1 Quadrillion | 1 Petabyte | 1 PB |
+
+- 1 byte = 8 bits; 1 ASCII character = 1 byte
+
+---
+
+### Latency Numbers Every Programmer Should Know
+
+| Operation | Latency |
+|-----------|---------|
+| L1 cache reference | ~0.5–1 ns |
+| Branch mispredict | ~3–5 ns |
+| L2 cache reference | ~4–7 ns |
+| Mutex lock/unlock | ~17–100 ns |
+| Main memory reference | ~100 ns |
+| Compress 1KB with Zippy | ~2–10 µs |
+| Send 2KB over 1 Gbps network | ~20–44 µs |
+| SSD random read | ~16 µs |
+| Read 1 MB sequentially from memory | ~3–250 µs |
+| Round trip within same datacenter | ~500 µs |
+| Disk seek | ~2–10 ms |
+| Read 1 MB sequentially from network | ~10 ms |
+| Read 1 MB sequentially from disk | ~30 ms (HDD) / ~825 µs (SSD) |
+| Packet roundtrip CA→Netherlands→CA | ~150 ms |
+
+**Key takeaways**:
+- **Memory is fast, disk is slow** → avoid disk seeks
+- **Simple compression is fast** → compress before sending over network
+- **Inter-datacenter communication is slow** → takes time to send data between regions
+
+---
+
+### Availability Numbers (SLAs)
+
+| Availability % | Nines | Downtime/day | Downtime/year |
+|---------------|-------|-------------|--------------|
+| 99% | 2 nines | 14.40 min | 3.65 days |
+| 99.9% | 3 nines | 1.44 min | 8.77 hours |
+| 99.99% | 4 nines | 8.64 sec | 52.60 min |
+| 99.999% | 5 nines | 864 ms | 5.26 min |
+| 99.9999% | 6 nines | 86.4 ms | 31.56 sec |
+
+- **SLA** (Service Level Agreement) — formal agreement on uptime
+- Major cloud providers (Amazon, Google, Microsoft) set SLAs at **99.9%+**
+
+---
+
+### Example: Twitter QPS & Storage Estimation
+
+**Assumptions** (exercise only, not real Twitter numbers):
+- 300M MAU, 50% daily → **150M DAU**
+- 2 tweets/day average, 10% contain media
+- Data stored 5 years
+
+**QPS calculation**:
+- `150M × 2 / 86,400 sec ≈ ~3,500 QPS`
+- **Peak QPS** ≈ 2× = **~7,000**
+
+**Storage calculation**:
+- Media storage/day: `150M × 2 × 10% × 1 MB = 30 TB/day`
+- 5-year media storage: `30 TB × 365 × 5 ≈ ~55 PB`
+
+---
+
+### Estimation Tips
+
+- **Round and approximate** — precision not expected (e.g., 99987/9.1 → 100,000/10)
+- **Write down assumptions** for reference
+- **Label units** — "5 MB" not just "5"
+- **Common estimations**: QPS, peak QPS, storage, cache, number of servers
+
+---
+
+## 🔹 Chapter 3: A Framework for System Design Interviews {#ch3}
+
+### What Interviewers Look For
+
+- **Not** just technical design skills — also:
+  - Ability to **collaborate** and **work under pressure**
+  - **Resolve ambiguity** constructively
+  - Ask **good questions**
+- **Red flags**: over-engineering, ignoring tradeoffs, narrow-mindedness, stubbornness
+- Questions are **open-ended** — no single correct answer
+- **Process** matters more than the final design
+
+---
+
+### The 4-Step Framework
+
+#### Step 1: Understand the Problem & Establish Design Scope (3–10 min)
+
+- **DO NOT** jump straight to a solution — this is a huge red flag
+- Ask clarifying questions to understand **exact requirements**:
+  - What specific features to build?
+  - How many users?
+  - Anticipated scale in 3/6/12 months?
+  - Company's technology stack and existing services?
+- Write down assumptions if interviewer asks you to make them
+
+**Example (News Feed System)**:
+- Mobile app? Web? → Both
+- Key features? → Make posts + see friends' feed
+- Feed sorted how? → Reverse chronological
+- Max friends? → 5,000
+- Traffic? → 10M DAU
+- Media types? → Images and videos
+
+---
+
+#### Step 2: Propose High-Level Design & Get Buy-In (10–15 min)
+
+- Develop **initial blueprint** and **collaborate** with interviewer
+- **Draw box diagrams** — clients, APIs, web servers, data stores, cache, CDN, message queue
+- **Back-of-the-envelope calculations** to validate scale
+- Walk through **concrete use cases** to discover edge cases
+- API endpoints and DB schema: include for smaller problems, skip for massive ones (ask interviewer)
+
+**Example (News Feed)**:
+- Two flows: **Feed publishing** (user posts → data to cache/DB → populate friends' feeds) and **News feed building** (aggregate friends' posts in reverse chronological order)
+
+---
+
+#### Step 3: Design Deep Dive (10–25 min)
+
+- By now you should have: agreed on goals/scope, sketched blueprint, gotten feedback
+- Work with interviewer to **identify and prioritize** components to dive into
+- Different interviewers focus on different things:
+  - Some: high-level architecture
+  - Senior candidates: system performance, bottlenecks, resource estimation
+  - Most: details of specific components
+- **Time management is essential** — don't get carried away with unnecessary details
+
+---
+
+#### Step 4: Wrap Up (3–5 min)
+
+- Identify **bottlenecks** and potential improvements — never say design is perfect
+- **Recap** your design
+- Discuss **error cases** (server failure, network loss)
+- **Operational issues** — monitoring, logging, rollout
+- **Next scale curve** — what changes for 10× users?
+- Propose **refinements** with more time
+
+---
+
+### Dos and Don'ts
+
+**Dos**:
+- Always ask for clarification
+- Understand requirements before designing
+- Communicate thinking out loud
+- Suggest multiple approaches
+- Design most critical components first
+- Bounce ideas off interviewer
+- Never give up
+
+**Don'ts**:
+- Don't jump into solution without clarifying requirements
+- Don't go too deep on one component too early
+- Don't think in silence
+- Don't hesitate to ask for hints
+- Don't assume you're done until interviewer says so
+
+---
+
+## 🔹 Chapter 4: Design a Rate Limiter {#ch4}
+
+### What is a Rate Limiter?
+
+- Controls the **rate of traffic** sent by a client or service
+- Limits number of client requests over a specified period
+- Excess calls are **blocked** (HTTP 429)
+
+**Benefits**:
+- **Prevent DoS attacks** — Twitter limits 300 tweets/3 hours; Google Docs API: 300 reads/user/60 sec
+- **Reduce cost** — fewer servers, important for paid 3rd-party APIs
+- **Prevent server overload** — filter bots/misbehavior
+
+---
+
+### Where to Put the Rate Limiter?
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Client-side | — | Unreliable; easily forged; no control over client implementation |
+| Server-side | Full control | Tightly coupled with API servers |
+| **Middleware** (recommended) | Decoupled; can use API gateway | Additional component |
+
+- **API gateway** — fully managed middleware supporting rate limiting, SSL termination, authentication, IP whitelisting, static content
+- **Guidelines** for choosing:
+  - Evaluate current tech stack
+  - Server-side gives full algorithm control vs. 3rd-party gateway limits choices
+  - If already using microservices + API gateway → add rate limiter there
+  - Limited engineering resources → commercial API gateway
+
+---
+
+### Rate Limiting Algorithms
+
+#### 1. Token Bucket
+
+- **Used by**: Amazon, Stripe
+- **Parameters**: Bucket size (max tokens), Refill rate (tokens/second)
+- **How it works**: tokens refill at fixed rate; each request consumes 1 token; no tokens → request dropped; bucket overflow → extra tokens discarded
+- **Bucket allocation**: different buckets per API endpoint, per IP, or global bucket
+- ✅ Pros: easy to implement, memory efficient, **allows burst traffic**
+- ❌ Cons: challenging to tune two parameters
+
+#### 2. Leaking Bucket
+
+- **Used by**: Shopify
+- Similar to token bucket but requests processed at **fixed rate** (FIFO queue)
+- **Parameters**: Bucket/queue size, Outflow rate
+- **How it works**: request arrives → if queue not full, add to queue; else drop; requests pulled and processed at regular intervals
+- ✅ Pros: memory efficient, **stable outflow rate**
+- ❌ Cons: burst traffic fills queue with old requests → recent requests rate-limited; hard to tune parameters
+
+#### 3. Fixed Window Counter
+
+- Divides timeline into **fixed time windows** with counters
+- Each request increments counter; counter ≥ threshold → drop until new window
+- ✅ Pros: memory efficient, easy to understand, good for resetting quota per window
+- ❌ Cons: **burst at window edges** can allow **2× allowed requests** (e.g., 5 requests in last 30s of window + 5 in first 30s of next = 10 in 1 minute when limit is 5/min)
+
+#### 4. Sliding Window Log
+
+- Keeps **timestamps** of all requests (stored in sorted sets, e.g., Redis)
+- On new request: remove outdated timestamps → add new timestamp → check log size vs. limit
+- ✅ Pros: **very accurate** — no edge-of-window burst problem
+- ❌ Cons: **high memory consumption** — stores timestamps even for rejected requests
+
+#### 5. Sliding Window Counter
+
+- **Hybrid** of fixed window counter + sliding window log
+- Formula: `requests_in_current_window + requests_in_previous_window × overlap_percentage`
+  - Example: 3 current + 5 previous × 70% = 6.5 → round to 6
+- ✅ Pros: smooths traffic spikes, memory efficient
+- ❌ Cons: approximation (assumes even distribution in previous window); Cloudflare found only **0.003% error** among 400M requests
+
+---
+
+### High-Level Architecture
+
+- **Counter storage**: **Redis** (in-memory, fast, supports expiration)
+  - `INCR` — increment counter by 1
+  - `EXPIRE` — set timeout for counter auto-deletion
+- Flow: Client → Rate limiter middleware → check counter in Redis → forward or reject (HTTP 429)
+
+---
+
+### Detailed Design Components
+
+- **Rules** stored on **disk** → workers pull rules → store in **cache**
+- Middleware loads rules from cache, fetches counters from Redis
+- Rate-limited requests either **dropped** or forwarded to **message queue**
+
+**Rate limiter HTTP response headers**:
+- `X-Ratelimit-Remaining` — remaining allowed requests in window
+- `X-Ratelimit-Limit` — calls allowed per time window
+- `X-Ratelimit-Retry-After` — seconds to wait before retrying
+
+**Lyft** open-sourced their rate-limiting component with YAML-based rules
+
+---
+
+### Distributed Rate Limiting Challenges
+
+#### Race Condition
+- Two concurrent requests read same counter → both increment to same value → one request not counted
+- **Solutions**: Lua scripts, Redis sorted sets (avoid locks — too slow)
+
+#### Synchronization
+- Multiple rate limiter servers may not share state
+- **Bad solution**: sticky sessions (not scalable)
+- **Good solution**: **centralized data store** (Redis) shared by all rate limiters
+
+---
+
+### Performance Optimization
+
+- **Multi-data center setup** — edge servers reduce latency (Cloudflare: 194 edge locations as of 2020)
+- **Eventual consistency model** for data synchronization
+
+### Monitoring
+
+- Verify rate limiting algorithm effectiveness
+- Verify rules aren't too strict (dropping valid requests) or too loose
+- For burst traffic (flash sales) → consider switching to **token bucket**
+
+---
+
+### Additional Topics
+
+- **Hard vs. soft rate limiting**: hard = strict threshold; soft = allow brief threshold exceedance
+- **Rate limiting at different OSI layers**: chapter covers Layer 7 (HTTP); can also do Layer 3 (IP) with iptables
+- **Client best practices to avoid being rate limited**:
+  - Use client cache
+  - Don't send too many requests in short time
+  - Catch exceptions and recover gracefully
+  - Add back-off time to retry logic
+
+---
+
+## 🔹 Chapter 5: Design Consistent Hashing {#ch5}
+
+### The Rehashing Problem
+
+- Simple approach: `serverIndex = hash(key) % N` (N = number of servers)
+- Works well when server pool is **fixed** and data is **evenly distributed**
+- **Problem**: when servers are added/removed, N changes → nearly **all keys get remapped** → storm of **cache misses**
+- Example: with 4 servers using `% 4`, removing 1 server changes to `% 3` → most keys map to different servers
+
+---
+
+### Consistent Hashing — Core Concept
+
+- Only **k/n keys** need remapping on average (k = total keys, n = slots) vs. traditional hashing where nearly all keys remap
+
+**How it works**:
+
+1. **Hash ring** — hash space (e.g., SHA-1: 0 to 2^160 - 1) connected end-to-end forming a ring
+2. **Hash servers** — map server IP/name onto the ring using hash function
+3. **Hash keys** — map data keys onto the ring (no modular operation)
+4. **Server lookup** — from key position, go **clockwise** until first server found → that server stores the key
+
+---
+
+### Add/Remove a Server
+
+- **Add server**: only keys between **new server** and **previous server (going counterclockwise)** need redistribution → minimal disruption
+- **Remove server**: only keys assigned to removed server get redistributed to the **next server clockwise** → rest unaffected
+
+---
+
+### Two Issues with Basic Approach
+
+1. **Uneven partitions** — when servers are added/removed, partition sizes can vary dramatically (one server may get 2× the hash space)
+2. **Non-uniform key distribution** — keys may cluster, causing most data on one server
+
+---
+
+### Virtual Nodes (Replicas) — The Solution
+
+- Each real server represented by **multiple virtual nodes** on the ring
+  - e.g., server 0 → `s0_0`, `s0_1`, `s0_2`; server 1 → `s1_0`, `s1_1`, `s1_2`
+- More virtual nodes → **more balanced** distribution (smaller standard deviation)
+  - 100 virtual nodes → ~10% standard deviation
+  - 200 virtual nodes → ~5% standard deviation
+- **Tradeoff**: more virtual nodes = more memory for node data; tune to fit requirements
+- Server lookup: go clockwise from key → find first **virtual node** → maps to corresponding real server
+
+---
+
+### Finding Affected Keys on Server Change
+
+- **Server added**: affected range = from new server, go **anticlockwise** to previous server; keys in that range redistributed to new server
+- **Server removed**: affected range = from removed server, go **anticlockwise** to previous server; keys redistributed to **next server clockwise**
+
+---
+
+### Benefits of Consistent Hashing
+
+- **Minimal key redistribution** on server add/remove
+- **Easy horizontal scaling** — data more evenly distributed
+- **Mitigates hotspot key problem** — distributes data more evenly
+
+### Real-World Usage
+
+- Amazon **Dynamo** database (partitioning component)
+- Apache **Cassandra** (data partitioning)
+- **Discord** chat application
+- **Akamai** CDN
+- Google **Maglev** network load balancer
+
+---
+
+## 🌳 Concept Tree {#tree}
+
+```
+System Design Interview
+├── Ch1: Scaling (Zero → Millions)
+│   ├── Single Server Setup
+│   │   ├── DNS → IP → HTTP → Response
+│   │   └── Traffic: Web App + Mobile App
+│   ├── Database Separation (Web tier + Data tier)
+│   │   ├── Relational (SQL) vs NoSQL
+│   │   └── When to choose NoSQL
+│   ├── Scaling Strategies
+│   │   ├── Vertical (scale up) — limits, SPOF
+│   │   └── Horizontal (scale out) — preferred at scale
+│   ├── Load Balancer
+│   │   ├── Public IP → private IPs
+│   │   └── Failover + scalability
+│   ├── Database Replication (Master/Slave)
+│   │   ├── Master = writes, Slaves = reads
+│   │   ├── Performance, reliability, HA
+│   │   └── Failover scenarios
+│   ├── Cache
+│   │   ├── Read-through strategy
+│   │   ├── Expiration, consistency, eviction (LRU/LFU/FIFO)
+│   │   └── Avoid SPOF — multi-server + overprovision
+│   ├── CDN
+│   │   ├── Static content delivery
+│   │   ├── TTL, fallback, invalidation
+│   │   └── Cost considerations
+│   ├── Stateless Web Tier
+│   │   ├── Stateful vs Stateless
+│   │   ├── Shared data store for sessions
+│   │   └── Enables auto-scaling
+│   ├── Data Centers
+│   │   ├── geoDNS routing
+│   │   ├── Data sync, testing, deployment
+│   │   └── Failover to healthy DC
+│   ├── Message Queue
+│   │   ├── Producer → Queue → Consumer
+│   │   └── Decoupling + independent scaling
+│   ├── Logging, Metrics, Automation
+│   └── Database Sharding
+│       ├── Sharding key selection
+│       └── Challenges: resharding, celebrity, joins
+├── Ch2: Back-of-the-Envelope Estimation
+│   ├── Power of Two (data units)
+│   ├── Latency Numbers
+│   ├── Availability / SLA Nines
+│   ├── Example: Twitter QPS + Storage
+│   └── Tips: round, label units, write assumptions
+├── Ch3: Interview Framework (4 Steps)
+│   ├── Step 1: Understand & scope (3-10 min)
+│   ├── Step 2: High-level design (10-15 min)
+│   ├── Step 3: Deep dive (10-25 min)
+│   ├── Step 4: Wrap up (3-5 min)
+│   └── Dos and Don'ts
+├── Ch4: Rate Limiter
+│   ├── Benefits: DoS prevention, cost, overload
+│   ├── Placement: client/server/middleware/API gateway
+│   ├── 5 Algorithms
+│   │   ├── Token Bucket (Amazon, Stripe)
+│   │   ├── Leaking Bucket (Shopify)
+│   │   ├── Fixed Window Counter
+│   │   ├── Sliding Window Log
+│   │   └── Sliding Window Counter (hybrid)
+│   ├── Architecture: Redis counters + middleware
+│   ├── Distributed challenges: race condition, sync
+│   └── Monitoring + performance optimization
+└── Ch5: Consistent Hashing
+    ├── Rehashing problem (% N)
+    ├── Hash ring concept
+    ├── Server/key lookup (clockwise)
+    ├── Add/remove server → minimal redistribution
+    ├── Virtual nodes → balanced distribution
+    └── Real-world: Dynamo, Cassandra, Discord
+```
+
+---
+
+## 📖 Key Definitions {#defs}
+
+| Term | Meaning | Context |
+|------|---------|---------|
+| **DNS** | Domain Name System; resolves domain names to IP addresses | 3rd-party paid service |
+| **Load Balancer** | Distributes incoming traffic evenly across servers | Uses public IP; servers use private IPs |
+| **Database Replication** | Master/slave pattern; master handles writes, slaves handle reads | Improves performance, reliability, HA |
+| **Cache** | Temporary in-memory storage for frequently accessed data | Read-through, write-through strategies |
+| **CDN** | Network of geographically dispersed servers for static content | Reduces latency via proximity |
+| **Stateless Architecture** | Servers keep no session state; state stored externally | Enables auto-scaling |
+| **geoDNS** | DNS that resolves based on user's geographic location | Used for multi-DC routing |
+| **Message Queue** | Durable in-memory buffer for async communication | Decouples producers/consumers |
+| **Sharding** | Splitting DB into smaller parts (shards), each with same schema but unique data | Horizontal DB scaling |
+| **Sharding Key** | Column(s) determining data distribution across shards | Must distribute data evenly |
+| **SPOF** | Single Point of Failure; component whose failure stops entire system | Avoid with redundancy |
+| **SLA** | Service Level Agreement; formal uptime guarantee | Measured in "nines" |
+| **Rate Limiter** | Controls request rate from clients; blocks excess | Prevents DoS, reduces cost |
+| **API Gateway** | Managed middleware for rate limiting, auth, SSL, etc. | Common in microservices |
+| **Consistent Hashing** | Hashing where only k/n keys remap when slots change | Used in distributed caches/DBs |
+| **Virtual Node** | Multiple ring positions representing one physical server | Solves uneven partition problem |
+| **TTL** | Time-to-Live; duration content remains cached | Used in CDN and cache |
+
+---
+
+## 🆚 Comparisons {#comps}
+
+### Rate Limiting Algorithms
+
+| Algorithm | Memory | Accuracy | Burst Handling | Complexity | Used By |
+|-----------|--------|----------|---------------|------------|---------|
+| Token Bucket | Low | Good | ✅ Allows bursts | Low | Amazon, Stripe |
+| Leaking Bucket | Low | Good | ❌ Smooths to fixed rate | Low | Shopify |
+| Fixed Window Counter | Low | ⚠️ Edge bursts | ❌ 2× at edges | Low | — |
+| Sliding Window Log | **High** | ✅ Very accurate | ✅ Precise | Medium | — |
+| Sliding Window Counter | Low | Good (approx) | Smooths spikes | Medium | Cloudflare |
+
+---
+
+## ⚡ Quick-Recall Points {#recall}
+
+- **DNS** is typically a 3rd-party paid service, not self-hosted
+- **Private IPs** used between load balancer and web servers for security
+- Most apps have **much higher read:write ratio** → more slave DBs than master
+- Cache data is in **volatile memory** — lost on restart → don't persist critical data in cache only
+- **LRU** is the most popular cache eviction policy
+- CDN uses **TTL** headers to determine cache duration
+- **Stateless** web tier is prerequisite for **auto-scaling**
+- **Consistent hashing** remaps only **k/n** keys on average vs. nearly all keys with simple hashing
+- **100–200 virtual nodes** bring standard deviation to 5–10% of mean
+- Rate limiter returns **HTTP 429** for throttled requests
+- **Redis INCR + EXPIRE** are the two key commands for rate limiting
+- Race conditions in distributed rate limiters solved with **Lua scripts** or **Redis sorted sets** (not locks)
+- **Sliding window counter** has only 0.003% error rate per Cloudflare testing
+- Stack Overflow (2013): 10M monthly visitors on **1 master DB** — vertical scaling example
+- Token bucket is best for **burst traffic** scenarios (e.g., flash sales)
+
+---
+
+## 📝 Summary {#summary}
+
+- **Ch1**: System scaling is iterative — start single server → separate DB → add load balancer → DB replication → cache → CDN → stateless web → multi-DC → message queues → sharding. Key principles: redundancy at every tier, stateless web, cache aggressively, shard data.
+
+- **Ch2**: Back-of-the-envelope estimation requires knowing power-of-two data units, latency numbers (memory ~ns, disk ~ms, cross-continent ~150ms), and availability nines. Process matters more than precision — round numbers, label units, state assumptions.
+
+- **Ch3**: Use the 4-step framework: (1) clarify requirements 3–10 min, (2) high-level design 10–15 min, (3) deep dive 10–25 min, (4) wrap up 3–5 min. Never jump to solutions. Communicate constantly. Avoid over-engineering.
+
+- **Ch4**: Rate limiters prevent DoS, reduce cost, and avoid overload. Five algorithms (token bucket, leaking bucket, fixed window, sliding window log, sliding window counter) each with distinct tradeoffs. Architecture uses Redis for counters. Distributed challenges include race conditions (Lua scripts) and synchronization (centralized Redis).
+
+- **Ch5**: Consistent hashing solves the rehashing problem where adding/removing servers causes massive key redistribution. Uses a hash ring where keys map to the next clockwise server. Virtual nodes solve uneven distribution. Used in Dynamo, Cassandra, Discord, Akamai, and Maglev.
+
+---
+
+⚠️ SOURCE APPEARS INCOMPLETE — notes cover only Chapters 1–5 of 16 total chapters in the book.
