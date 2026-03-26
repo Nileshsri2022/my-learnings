@@ -1,7 +1,7 @@
 Alright — this isn’t a traditional research paper, but it *does* describe a real method (RLHF + dialogue fine-tuning). I’ll treat it like a paper and break it down rigorously using your framework.
 
 ---
-
+**Ref=> https://openai.com/index/chatgpt/**
 # 🧠 “Introducing ChatGPT” 
 
 ---
