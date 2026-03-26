@@ -4,7 +4,7 @@
 ## 🎯 1. THE ONE-LINER
 
 **They show you can build a ChatGPT-like model cheaply by generating your own training data using a stronger model.**
-
+**Ref=>https://crfm.stanford.edu/2023/03/13/alpaca.html**
 ---
 
 ## 🤔 2. THE PROBLEM (Why does this paper exist?)
